@@ -1,4 +1,4 @@
 things
 ======
 
-Here is [demo](http://t1.netoc.ie/things/ "Things")
+Here is [demo](http://t1.netsoc.ie/things/ "Things")
