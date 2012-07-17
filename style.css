@@ -1,5 +1,5 @@
 body {
-	font-family: Arial
+	font-family: "Arial", Sans-Serif;
 }
 
 .node {
@@ -38,26 +38,40 @@ body {
 	background-color: #2f5;
 }
 
-.thing0.top-right {
-	border-bottom-left-radius: 0px;
+.thing0 h1 {
+	border-radius: 5px;
+
+	font-size: 20px;
+	color: #2277ff;
+	background-color: rgba(255, 255, 255, 0.5);
 }
 
-.thing0.bottom-right {
-	border-top-left-radius: 0px;
+.thing0 a, .thing0 a:visited {
+	color: inherit;
+	text-decoration: inherit;
 }
 
-.thing0.bottom-left {
+.thing0.top-right, .thing0.top-right h1 {
 	border-top-right-radius: 0px;
 }
 
-.thing0.top-left {
+.thing0.bottom-right, .thing0.bottom-right h1 {
 	border-bottom-right-radius: 0px;
 }
 
+.thing0.bottom-left, .thing0.bottom-left h1 {
+	border-bottom-left-radius: 0px;
+}
+
+.thing0.top-left, .thing0.top-left h1 {
+	border-top-left-radius: 0px;
+}
 
 
+/*
+ * interact.js
+ */
 
-	
 .interact-node {
 }
 

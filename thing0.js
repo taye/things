@@ -7,69 +7,30 @@
 if (!(window.things instanceof Array)) {
 	window.things = [];
 	window.things.debugs = [];
+	window.things.onDomReady = [];
 }
 
-window.things.push (function (things) {
+window.things.push(function (things) {
 	'use strict';
 
 	var interact = this.interact,
 		dragging = false,
-		svgTags = {},
 		nodes = [],
 		nodeCount = 0,
 		thing0Count = 0,
 		document = window.document,
 		body,
-		ui,
 		activeThing = null,
 		nextActiveThing = null,
-		info,
+		info = {},
 		px = 'px',
-		supportsTouch = 'createTouch' in document,
-		downEvent,
-		upEvent,
-		moveEvent,
+		supportsTouch = things.supportsTouch,
+		downEvent = things.downEvent,
+		upEvent = things.upEvent,
+		moveEvent = things.moveEvent,
+		eventTypes = things.eventTypes,
 		// Event Wrapper
-		events = {
-			add: function (target, type, listener, useCapture) {
-				if (target.events === undefined) {
-					target.events = [];
-				}
-				if (target.events[type] === undefined) {
-					target.events[type] = [];
-				}
-
-				target.addEventListener(type, listener, useCapture || false);
-				target.events[type].push(listener);
-
-				return listener;
-			},
-			remove: function (target, type, listener, useCapture) {
-				var i;
-
-				if (!(target && target.events)) {
-					if (type === 'all') {
-						for (i = 0; i < target.events.length; i++) {
-							events.remove(target, target.events[i]);
-						}
-					} else if (target.events[type].length) {
-						if (!listener) {
-							for (i = 0; i < target.events[type].length; i++) {
-								target.removeEventListener(type, target.events[type][i], useCapture || false);
-								target.events[type].splice(i, 1);
-							}
-						} else {
-							for (i = 0; i < target.events[type].length; i++) {
-								if (target.events[type][i] === listener) {
-									target.removeEventListener(type, listener, useCapture || false);
-									target.events[type].splice(i, 1);
-								}
-							}
-						}
-					}
-				}
-			}
-		},
+		events = things.events,
 		settings = {
 			thing0CornerRadius: 2,
 			interval: 20,
@@ -89,16 +50,6 @@ window.things.push (function (things) {
 			},
 			thing0Radius: 40
 		};
-
-	if (supportsTouch) {
-			downEvent = 'touchstart';
-			upEvent = 'touchend';
-			moveEvent = 'touchmove';
-	} else {
-			downEvent = 'mousedown';
-			upEvent = 'mouseup';
-			moveEvent = 'mousemove';
-	}
 
 
 	nodes.indexOf = function (node) {
@@ -164,12 +115,12 @@ window.things.push (function (things) {
 		
 		this.element = new Element('div', 'node');
 		this.thing0s = [];
-		this.x = x || 100;
-		this.y = y || 100;
+		this.x = x || 200 + (350 * (nodes.length) + 50 * (nodes.length > 0));
+		this.y = y || 300;
 		
-		give(ui, this.element);
+		give(things.area, this.element);
 		elementPosition = this.getElementPosition();
-		setPosition(this.element, elementPosition.x, elementPosition.y);
+		things.setPosition(this.element, elementPosition.x, elementPosition.y);
 
 		interact.set(this.element, {drag: true});
 
@@ -201,13 +152,12 @@ window.things.push (function (things) {
 	
 	Node.prototype.eventListeners = {
 		interactdragstart: function (event) {
-			console.log('Do something Like make all the node get small i dunno');
 			this.dragging = true;
 		},
 		interactdragmove: function (event) {
 			var i;
 		
-			changePosition(event.target, event.detail.dx, event.detail.dy);
+			things.changePosition(event.target, event.detail.dx, event.detail.dy);
 			this.x += event.detail.dx;
 			this.y += event.detail.dy;
 				
@@ -216,8 +166,15 @@ window.things.push (function (things) {
 			}
 		},
 		interactdragend: function (event) {
-			console.log('Node Drag End');
 			this.dragging = false;
+			
+		},
+		click: function (event) {
+			if (event.shiftKey) {
+				this.cycle(-1);
+			} else {
+				this.cycle(1);
+			}
 		}
 	};
 	
@@ -248,10 +205,14 @@ window.things.push (function (things) {
 				}
 			}
 			// If all are full
-			return new Node(350 * (nodes.length + 1), 300).push(thing0);
+			return new Node().push(thing0);
 		}
-
-		give(ui, thing0.element);
+		if (!this.parentNode) {
+			give(things.area, thing0.element);
+			// Do some sort of Growing out animation
+		} else {
+			give(things.area, thing0.element);
+		}
 		thing0.position = this.thing0s.length;
 		thing0.node = this;
 		thing0.snapTo(this);
@@ -273,11 +234,10 @@ window.things.push (function (things) {
 				thing0.setCornerRadius(settings.thing0CornerRadius);
 			}
 		}
-		console.log("Reorder Node");
 	};
 
 	Node.prototype.splice = function (index, count) {
-		if (this.thing0s[index] instanceof Thing) {
+		if (this.thing0s[index] instanceof Thing0) {
 			this.thing0s[index].node = null;
 			this.thing0s.splice(index, count);
 		}
@@ -287,7 +247,7 @@ window.things.push (function (things) {
 	Node.prototype.indexOf = function (thing0) {
 		var i;
 
-		if (thing0 instanceof Thing) {
+		if (thing0 instanceof Thing0) {
 			return this.thing0s.indexOf(thing0);
 		} else {
 			for (i = 0; i < this.thing0s.length; i++) {
@@ -307,7 +267,7 @@ window.things.push (function (things) {
 		'top-left'
 	];
 
-	function Thing (details, node) {
+	function Thing0 (details, node) {
 		var i,
 			titleElement,
 			descriptionElement;
@@ -324,6 +284,7 @@ window.things.push (function (things) {
 		titleElement.innerHTML = '<a href="' + this.location +'">' + this.title + '<a/>';
 		descriptionElement = give(this.element, new Element ('p'));
 		descriptionElement.innerHTML = this.description;
+		this.randomColour();
 
 		if (!(node instanceof Node)) {
 			node = (nodes[0] || new Node());
@@ -331,10 +292,18 @@ window.things.push (function (things) {
 		
 		node.push(this);
 
-		interact.set(this.element, {drag: true});
+		interact.set(this.element, {drag: true, order: true});
 	}
 	
-	Thing.prototype.eventListeners = {
+	Thing0.prototype.randomColour = function () {
+		var h = 360*Math.random(),
+			s = 100 + '%',
+			l = 57 + '%';
+	
+		this.style('background-color', 'hsl(' + [h, s, l].join() + ')');
+	}
+	
+	Thing0.prototype.eventListeners = {
 		interactdragstart: function (event) {
 			this.dragging = true;
 			this.setCornerRadius('');
@@ -344,11 +313,9 @@ window.things.push (function (things) {
 				target = this.nearestFreeNode(),
 				targetLocation = target.getElementPosition(),
 				currentLocation = this.getElementPosition(),
-				//distance = Math.pow(targetLocation.x - currentLocation.y, 2) + ,
 				i;
-			//	newRadius = (Math.min(200, distance) / 200) * settings.thingRadius;
 		
-			changePosition(this.element, event.detail.dx, event.detail.dy);
+			things.changePosition(this.element, event.detail.dx, event.detail.dy);
 			this.x += event.detail.dx;
 			this.y += event.detail.dy;
 			
@@ -356,8 +323,6 @@ window.things.push (function (things) {
 				nodes[i].element.classList.remove('drop-target');
 			}
 			target.element.classList.add('drop-target');
-
-			//this.style('border-' + this.corners[this.position] + '-radius', newRadius + px);
 		},
 		interactdragend: function (event) {
 			var target = this.nearestFreeNode();
@@ -394,7 +359,7 @@ window.things.push (function (things) {
 		}
 	};
 	
-	Thing.prototype.getPlace = function (node) {
+	Thing0.prototype.getPlace = function (node) {
 		var x,
 			y,
 			halfThing = {
@@ -442,7 +407,7 @@ window.things.push (function (things) {
 		};
 	};
 	
-	Thing.prototype.setNode = function (node) {
+	Thing0.prototype.setNode = function (node) {
 		if (this.node) {
 			if (this.node === node) {
 				this.setCornerRadius(settings.thing0CornerRadius);
@@ -453,15 +418,15 @@ window.things.push (function (things) {
 		}
 	};
 	
-	Thing.prototype.focus = function (event) {
+	Thing0.prototype.focus = function (event) {
 		// Do animations/sounds etc
 		var i = 0,
 			steps = 5,
 			interval = 20,
 			grow,
 			compStyle = window.getComputedStyle(this.element),
-			width = parseStyleLength(this.element, compStyle.width),
-			height = parseStyleLength(this.element, compStyle.height);
+			width = things.parseStyleLength(this.element, compStyle.width),
+			height = things.parseStyleLength(this.element, compStyle.height);
 		
 		this.isGrowing = true;
 		this.element.classList.add('active');
@@ -485,14 +450,14 @@ window.things.push (function (things) {
 		window.setTimeout(grow, interval);
 	};
 
-	Thing.prototype.defocus = function (event) {
+	Thing0.prototype.defocus = function (event) {
 		var i = 0,
 			steps = 5,
 			interval = 20,
 			shrink,
 			compStyle = window.getComputedStyle(this.element),
-			width = parseStyleLength(this.element, compStyle.width),
-			height = parseStyleLength(this.element, compStyle.height);
+			width = things.parseStyleLength(this.element, compStyle.width),
+			height = things.parseStyleLength(this.element, compStyle.height);
 
 		this.element.classList.remove('active');
 		this.isShrinking = true;
@@ -522,7 +487,7 @@ window.things.push (function (things) {
 		window.setTimeout(shrink, interval);
 	};
 	
-	Thing.prototype.moveTo = function (node) {
+	Thing0.prototype.moveTo = function (node) {
 		var i = 0,
 			distance = this.distanceTo(node),
 			target = this.getPlace(node),
@@ -542,7 +507,7 @@ window.things.push (function (things) {
 				this.x += unitVector.x;
 				this.y += unitVector.y;
 				
-				changePosition(this.element, unitVector.x, unitVector.y);
+				things.changePosition(this.element, unitVector.x, unitVector.y);
 				
 				if ((i += 1) < steps) {
 					window.setTimeout(nudge, interval);
@@ -551,7 +516,7 @@ window.things.push (function (things) {
 					this.y = target.y;
 					
 					elementTarget = this.getElementPosition();
-					setPosition(this.element, elementTarget.x, elementTarget.y);
+					things.setPosition(this.element, elementTarget.x, elementTarget.y);
 					
 					this.setNode(node);
 					this.node.element.classList.remove('drop-target');
@@ -565,7 +530,7 @@ window.things.push (function (things) {
 		return this;
 	};
 	
-	Thing.prototype.snapTo = function (node) {
+	Thing0.prototype.snapTo = function (node) {
 		var target = this.getPlace(node),
 			elementPosition;
 		
@@ -573,11 +538,11 @@ window.things.push (function (things) {
 		this.y = target.y;
 		
 		elementPosition = this.getElementPosition();
-		setPosition(this.element, elementPosition.x, elementPosition.y);
+		things.setPosition(this.element, elementPosition.x, elementPosition.y);
 		return this;
 	};
 	
-	Thing.prototype.getElementPosition = Node.prototype.getElementPosition = function () {
+	Thing0.prototype.getElementPosition = Node.prototype.getElementPosition = function () {
 		var halfWidth = this.element.offsetWidth / 2,
 			halfHeight = this.element.offsetHeight / 2;
 		
@@ -587,7 +552,7 @@ window.things.push (function (things) {
 		};
 	};
 	
-	Thing.prototype.nearestNode = function (mustBeFree) {
+	Thing0.prototype.nearestNode = function (mustBeFree) {
 		var i,
 			x,
 			y,
@@ -607,18 +572,18 @@ window.things.push (function (things) {
 		return nodes[closest];
 	};
 	
-	Thing.prototype.nearestFreeNode = function () {
+	Thing0.prototype.nearestFreeNode = function () {
 		return this.nearestNode(true);
 	};
 	
-	Thing.prototype.distanceTo = Node.prototype.distanceTo = function (other) {
+	Thing0.prototype.distanceTo = Node.prototype.distanceTo = function (other) {
 		var x = this.x - other.x,
 			y = this.y - other.y;
 
 		return Math.sqrt(x*x + y*y);
 	};
 
-	Thing.prototype.setCornerRadius = function (radius, animate) {
+	Thing0.prototype.setCornerRadius = function (radius, animate) {
 		// Reset all other corner radii
 		for (i = 0; i < 4; i++) {
 			if (i !== this.position){
@@ -631,7 +596,7 @@ window.things.push (function (things) {
 			interval = 20,
 			morph,
 			corner = 'border-' + this.corners[this.position] + '-radius',
-			currentRadius = parseStyleLength(this.element, this.style(corner) || 
+			currentRadius = things.parseStyleLength(this.element, this.style(corner) || 
 					window.getComputedStyle(this.element)['border' + this.cornersJS[this.position] + 'Radius']),
 			change;
 					
@@ -649,13 +614,22 @@ window.things.push (function (things) {
 			} else {
 				this.isMorphing = false;
 				this.style(corner, radius + px);
+				this.element.classList.add(this.corners[this.position]);
+				
+				// Reset all other corner radii
+				for (i = 0; i < 4; i++) {
+					if (i !== this.position){
+						this.style('border-' + this.corners[i] + '-radius', '');
+						this.element.classList.remove(this.corners[i]);
+					}
+				}
 			}
 		}.bind(this);
 		
 		window.setTimeout(morph, interval);
 	};
 
-	Thing.prototype.style = Node.prototype.style = function (style, value) {
+	Thing0.prototype.style = Node.prototype.style = function (style, value) {
 		if (style !== undefined && value !== undefined ) {
 			return this.element.style.setProperty(style, value);
 		}
@@ -665,38 +639,72 @@ window.things.push (function (things) {
 		return this.element.style;
 	};
 
-	Thing.prototype.corners = [
+	Thing0.prototype.corners = [
 		'bottom-left',
 		'top-left',
 		'top-right',
 		'bottom-right'
 	];
 
-	Thing.prototype.cornersJS = [
+	Thing0.prototype.cornersJS = [
 		'BottomLeft',
 		'TopLeft',
 		'TopRight',
 		'BottomRight'
 	];
 
-	Thing.prototype.remove = function deleteThing () {
+	Thing0.prototype.remove = function deleteThing () {
 		remove(this.element);
 		this.node.remove(this);
 	};
 
-	function getInfo () {
-		// Do AJAX and parsing of xml info file;
-		var i,
-			demoThings = [];
+	function getInfo (mode) {
+		if (mode !== 'demo') {
+			// Do AJAX and parsing of xml info file;
+			var request = things.ajax({
+						url: 'info.xml',
+						async: false,
+						noCache: true
+					}),
+				node = new Node();
+			
+			info.thing0s = [];
+			
+			// If the document was loaded correctly
+			if (request.readyState === 4 && request.status === 200) {
+				var elementThings = things.getTags(request.responseXML, 'thing0');
 
-		for (i = 0; i < 9; i++) {
-			demoThings.push({
-					title: 'thing0 ' + i,
-					description: 'demo description',
-					location: '/ttt/'
-				});
+			
+				for (i = 0; i < elementThings.length; i++) {
+					try {
+						info.thing0s.push({
+								title: things.getTag(elementThings[i], 'title').textContent,
+								description: things.getTag(elementThings[i], 'description').textContent,
+								location: things.getTag(elementThings[i], 'location').textContent
+							});
+					}
+					catch (error) {
+						console.log('Error trying to parse file', error);
+					}
+				}
+			}
+
+			for (i = 0; i < info.thing0s.length; i++) {
+				new Thing0(info.thing0s[i], node);
+			}
+		} else {
+			var i,
+				demoThings = [];
+
+			for (i = 0; i < 9; i++) {
+				demoThings.push({
+						title: 'thing0 ' + i,
+						description: 'Description of this thing.',
+						location: '/ttt/'
+					});
+			}
+			return {thing0s: demoThings};
 		}
-		return {thing0s: demoThings};
 	}
 
 	function debug () {
@@ -723,206 +731,16 @@ window.things.push (function (things) {
 		}
 	}
 
+	things.onDomReady.push( function (event) {
+			var node,
+				i;
 
-	/**
-	 * @function
-	 * @description Get pixel length from string
-	 * @param {Object HTMLElement | Object SVGElement} element the element the style property belongs to
-	 * @param {Sting} string The style length (px/%);
-	 * @returns {Number}
-	 */
-	function parseStyleLength(element, string) {
-		var lastChar = string[string.length - 1];
+			getInfo();
 
-		if (lastChar === 'x') {
-			return Number(string.substring(string.length - 2, 0));
-		} else if (lastChar === '%') {
-			return parseStyleLength(element.parentNode) * Number(string.substring(string.length - 1, 0)) / 100;
-		} else if (lastChar === 'm') {
-			// Not Ready ***
-			return Number(string.substring(string.length - 2, 0)) * parseStyleLength(element, window.getComputedStyle(element).fontSize);
-		}
-		return string;
-	}
-
-	/**
-	 * @function
-	 * @description Get the size of a DOM element
-	 * @param {Object HTMLElement | Object SVGElement} element
-	 * @returns {Object} {x: width, y: height}
-	 */
-	function getSize(element) {
-		var width,
-			height,
-			dimensions;
-
-		if (element.nodeName in svgTags) {
-			dimensions = svgTags[element.nodeName].getSize(element);
-			width = dimensions.x;
-			height = dimensions.y;
-		} else {
-			width = element.style.width;
-			height = element.style.height;
-
-			if(width !== '') {
-				width = parseStyleLength(element, width);
-				height  = parseStyleLength(element, height);
-			} else {
-				width = parseStyleLength(element, window.getComputedStyle(element).width);
-				height = parseStyleLength(element, window.getComputedStyle(element).height);
+			for (i = 0; i < things.eventTypes.length; i++) {
+				events.add(document, things.eventTypes[i], eventListener);
 			}
-		}
-		return {x: width, y: height};
-	}
-
-	/**
-	 * @function
-	 * @description Set Element to the given Size
-	 * @param {Object HTMLElement | Object SVGElement} element
-	 * @param {Number | String} width the new width of the element
-	 * @param {Number | String} height the new height of the element
-	 */
-	function setSize(element, width, height) {
-		if (element.nodeName in svgTags) {
-			svgTags[element.nodeName].setSize(element, width, height);
-		} else {
-			if (typeof width === 'number') {
-				width += px;
-			}
-			if (typeof height === 'number') {
-				height += px;
-			}
-
-			if (typeof width === 'string') {
-				element.style.setProperty('width', width);
-			}
-			if (typeof height === 'string') {
-				element.style.setProperty('height', height);
-			}
-		}
-	}
-
-	/**
-	 * @function
-	 * @description Change the element's size by the given value
-	 * @param {Object HTMLElement | Object SVGElement} element
-	 * @param {Number} dx the amount by which to change the width
-	 * @param {Number} dy the amount by which to change the height
-	 * @param {Number} [minx] the minimum width the element should have
-	 * @param {Number} [miny] the minimum height the element should have
-	 */
-	function changeSize(element, dx, dy, minx, miny) {
-		var size = getSize(element),
-			width = size.x,
-			height = size.y;
-
-		minx = Number(minx) || 100;
-		miny = Number(miny) || 100;
-
-		width = Math.max(width + dx, minx);
-		height = Math.max(height + dy, miny);
-
-		setSize(element, width, height);
-	}
-
-	/**
-	 * @function
-	 * @description Get the position of a DOM element relative to the top left of the page
-	 * @param {Object HTMLElement | Object SVGElement} element
-	 * @returns {Object} {x: left, y: top}
-	 */
-	function getPosition(element) {
-		var left,
-			top;
-
-		if (element.nodeName in svgTags) {
-			var screenCTM = element.getScreenCTM();
-
-			left = screenCTM.e;
-			top = screenCTM.f;
-		} else {
-			var clientRect = element.getBoundingClientRect(),
-				compStyle = window.getComputedStyle(element);
-
-
-			left = clientRect.left + window.scrollX - parseStyleLength(element, compStyle.marginLeft),
-			top = clientRect.top + window.scrollY - parseStyleLength(element, compStyle.marginTop);
-		}
-		return {x: left, y: top};
-	}
-
-	/**
-	 * @function
-	 * @description Move Element to the given position (assumes it is positioned absolutely or fixed)
-	 * @param {Object HTMLElement | Object SVGElement} element
-	 * @param {Number} x position from the left of the element
-	 * @param {Number} y position from the top of the element
-	 */
-	function setPosition(element, x, y) {
-		var translate;
-
-		if (element.nodeName in svgTags) {
-			if (typeof x === 'number' && typeof y === 'number') {
-				translate = 'translate(' + x + ', ' + y + ')';
-				element.parentNode.setAttribute('transform', translate);
-			}
-		} else if (typeof x === 'number' && typeof y === 'number') {
-			element.style.setProperty('left', x + px, '');
-			element.style.setProperty('top', y + px, '');
-		}
-	}
-
-	/**
-	 * @function
-	 * @description Change the element's position by the given value
-	 * @param {Object HTMLElement | Object SVGElement} element
-	 * @param {Number} dx the amount by which to change the distance from the left
-	 * @param {Number} dy the amount by which to change the distance from the top
-	 */
-	function changePosition(element, dx, dy) {
-		var variable,
-			x,
-			y;
-
-		if (element.nodeName in svgTags) {
-			if (typeof dx === 'number' && typeof dy === 'number') {
-				//variable = getTransform(element, 'translate');
-				x = Number(variable[0]);
-				y = Number(variable[1]);
-
-				//setTransform(element, 'translate',  [ x + dx, y + dy]);
-			}
-		} else if (typeof dx === 'number' && typeof dy === 'number') {
-			variable = window.getComputedStyle(element);
-			x = parseStyleLength(element, variable.left);
-			y = parseStyleLength(element, variable.top);
-
-			setPosition(element, x + dx, y + dy);
-		}
-	}
-
-	function onDomReady (event) {
-		var node,
-			i;
-
-		body = document.body;
-		ui = document.getElementById('thing');
-
-		info = getInfo();
-		node = new Node(300, 300);
-
-		for (i = 0; i < info.thing0s.length; i++) {
-			new Thing(info.thing0s[i], node);
-		}
-
-		events.add(document, 'interactdragstart', eventListener);
-		events.add(document, 'interactdragmove', eventListener);
-		events.add(document, 'interactdragend', eventListener);
-		events.add(document, 'mouseover', eventListener);
-		events.add(document, 'mouseout', eventListener);
-	}
-
-	events.add(document, 'DOMContentLoaded', onDomReady);
+		});
 
 	things.debugs.push(debug);
 });
