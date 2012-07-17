@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<apps>
+	<app>
+		<title>app0</title>
+		<description>app0 description</description>
+		<location>/ttt/</location>
+	</app>
+</apps>

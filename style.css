@@ -1,0 +1,100 @@
+body {
+	font-family: Arial
+}
+
+.node {
+	width: 25px;
+	height: 25px;
+
+	top: 0px;
+	left: 0px;
+	position: absolute;
+
+	margin: 0px;
+	padding: 0px;
+	border: solid 3px black;
+	border-radius: 40px;
+
+	background-color: #3388ff;
+}
+
+.node.drop-target {
+	background-color: #2222ff;
+}
+    
+.thing0 {
+	width: 150px;
+	height: 150px;
+
+	top: 0px;
+	left: 0px;
+	position: absolute;
+	
+	margin: 0px;
+	padding: 10px;
+	border: solid 3px black;
+	border-radius: 40px;
+
+	background-color: #2f5;
+}
+
+.thing0.top-right {
+	border-bottom-left-radius: 0px;
+}
+
+.thing0.bottom-right {
+	border-top-left-radius: 0px;
+}
+
+.thing0.bottom-left {
+	border-top-right-radius: 0px;
+}
+
+.thing0.top-left {
+	border-bottom-right-radius: 0px;
+}
+
+
+
+
+	
+.interact-node {
+}
+
+.interact-node:hover {
+	border-color: #AAAAAA;
+}
+
+.interact-target {
+	border-style: dashed;
+	border-color: #AAAAAA;
+}
+
+.interact-demo-node:before {
+	content: attr(id);
+	border-bottom: 2px solid red;
+}
+
+.interact-draggable {
+	position: absolute;
+}
+
+.interact-demo-node {
+    position: absolute;
+	border: 5px solid #333333;
+	width: 200px;
+	height: 200px;
+	overflow: auto;
+	background-color: #2288FF;
+	padding: 15px;
+	margin: 15px;
+}
+
+#license { 
+	border: 1px solid #555555;
+	margin-bottom: 10px;
+	margin-top: 10px;
+	padding: 10px;
+	text-align: center;
+}
+
