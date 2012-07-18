@@ -13,7 +13,7 @@ if (!(window.things instanceof Array)) {
 window.things.push(function (things) {
 	'use strict';
 
-	var interact = this.interact,
+	var interact = things.interact,
 		dragging = false,
 		nodes = [],
 		nodeCount = 0,
@@ -589,6 +589,7 @@ window.things.push(function (things) {
 			if (i !== this.position){
 				this.style('border-' + this.corners[i] + '-radius', '');
 			}
+			this.element.classList.remove(this.corners[i]);
 		}
 
 		var i = 0,
