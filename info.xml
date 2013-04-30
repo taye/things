@@ -11,7 +11,7 @@
 		<location>#</location>
 	</thing0>	<thing0>
 		<title>Cycle Nodes</title>
-		<description>click on a node to rotate its thing0s. Hold shift to rotate anti-clockwise.</description>
+		<description>Click on a node to rotate its thing0s. Hold shift to rotate anti-clockwise.</description>
 		<location>#</location>
 	</thing0>
 	<thing0>
@@ -20,9 +20,9 @@
 		<location>#</location>
 	</thing0>
 	<thing0>
-		<title>Title of thing</title>
-		<description>This describes this thing</description>
-		<location>#</location>
+		<title>Github</title>
+		<description>Look at source code and things</description>
+		<location>https://github.com/TAdeyemi/things</location>
 	</thing0>
 	<thing0>
 		<title>Title of thing</title>
