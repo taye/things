@@ -100,9 +100,9 @@ window.things.push(function (things) {
 	function eventListener (event) {
 		var object = getObject(event.target),
 			i;
-		if (event.type === 'interactdragstart') {
+		if (event.type === 'dragstart') {
 			dragging = true;
-		} else if (event.type === 'interactdragend') {
+		} else if (event.type === 'dragend') {
 			dragging = false;
 		}
 		if (object && object.eventListeners && event.type in object.eventListeners) {
@@ -122,7 +122,7 @@ window.things.push(function (things) {
 		elementPosition = this.getElementPosition();
 		things.setPosition(this.element, elementPosition.x, elementPosition.y);
 
-		interact.set(this.element, {drag: true});
+		interact(this.element).draggable(true);
 
 		nodes.push(this);
 
@@ -151,21 +151,21 @@ window.things.push(function (things) {
 	}
 	
 	Node.prototype.eventListeners = {
-		interactdragstart: function (event) {
+		dragstart: function (event) {
 			this.dragging = true;
 		},
-		interactdragmove: function (event) {
+		dragmove: function (event) {
 			var i;
 		
-			things.changePosition(event.target, event.detail.dx, event.detail.dy);
-			this.x += event.detail.dx;
-			this.y += event.detail.dy;
+			things.changePosition(event.target, event.dx, event.dy);
+			this.x += event.dx;
+			this.y += event.dy;
 				
 			for (i = 0; i < this.thing0s.length; i++) {
 				this.thing0s[i].eventListeners[event.type].call(this.thing0s[i], event, true);
 			}
 		},
-		interactdragend: function (event) {
+		dragend: function (event) {
 			this.dragging = false;
 			
 		},
@@ -292,7 +292,7 @@ window.things.push(function (things) {
 		
 		node.push(this);
 
-		interact.set(this.element, {drag: true, order: true});
+		interact(this.element).draggable(true);
 	}
 	
 	Thing0.prototype.randomColour = function () {
@@ -304,27 +304,27 @@ window.things.push(function (things) {
 	}
 	
 	Thing0.prototype.eventListeners = {
-		interactdragstart: function (event) {
+		dragstart: function (event) {
 			this.dragging = true;
 			this.setCornerRadius('');
 		},
-		interactdragmove: function (event, movedWithNode) {
+		dragmove: function (event, movedWithNode) {
 			var clientRect = this.element.getClientRects()[0],
 				target = this.nearestFreeNode(),
 				targetLocation = target.getElementPosition(),
 				currentLocation = this.getElementPosition(),
 				i;
 		
-			things.changePosition(this.element, event.detail.dx, event.detail.dy);
-			this.x += event.detail.dx;
-			this.y += event.detail.dy;
+			things.changePosition(this.element, event.dx, event.dy);
+			this.x += event.dx;
+			this.y += event.dy;
 			
 			for (i = 0; i < nodes.length; i ++) {
 				nodes[i].element.classList.remove('drop-target');
 			}
 			target.element.classList.add('drop-target');
 		},
-		interactdragend: function (event) {
+		dragend: function (event) {
 			var target = this.nearestFreeNode();
 			
 			this.moveTo(target);
@@ -739,7 +739,7 @@ window.things.push(function (things) {
 			getInfo();
 
 			for (i = 0; i < things.eventTypes.length; i++) {
-				events.add(document, things.eventTypes[i], eventListener);
+				interact.bind(things.eventTypes[i], eventListener);
 			}
 		});
 

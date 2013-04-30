@@ -74,12 +74,12 @@ window.things = (function (things) {
 		'doubleclick',
 		'mouseover',
 		'mouseout',
-		'interactdragstart',
-		'interactdragmove',
-		'interactdragend',
-		'interactresizestart',
-		'interactresizesmove',
-		'interactresizesend'
+		'dragstart',
+		'dragmove',
+		'dragend',
+		'resizestart',
+		'resizesmove',
+		'resizesend'
 	];
 	
 	things.ajax = function (options) {
